@@ -1,5 +1,8 @@
-import random, komm, numpy
-import Generator, Sender, Transmitter, Receiver, Analyzer
+from Receiver import Receiver
+from Sender import Sender
+from Transmitter import Transmitter
+from Analyzer import Analyzer
+from Generator import Generator
 
 
 # global functions
@@ -28,7 +31,7 @@ mode = "CRC"
 # code
 print("data raw: \t\t", sender.data_raw)
 sender.data_send = sender.code(mode)
-print("\t->encoding mode: ", mode)
+print("\t->coding mode: ", mode)
 print("data send:\t\t", sender.data_send)
 
 # send
@@ -41,6 +44,7 @@ receiver.data_received = transmitter.data_noised
 
 # encode
 receiver.encode(mode)
+print("\t->encoding mode: ", mode)
 
 # print info
 print("data received:\t", receiver.data_received)
