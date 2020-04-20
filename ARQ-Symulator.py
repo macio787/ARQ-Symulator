@@ -21,8 +21,8 @@ class Sender:
             print("coder initiated")
             return
 
-        def code_PAR(self, data):
-            n = len(data)
+        def code_PAR(self, data, n=0):
+            if n==0: n = len(data)
             sum = 0
             i = 0
             counter = 1
@@ -41,15 +41,15 @@ class Sender:
             n = len(data)
             # TODO::czy to sie w ogole jakos koduje...
             return
-    # end class Coder
+# end class Coder
 
     data = []
     coder = Coder()
 
     def code(self, mode):
         if mode == "PAR":
-            self.coder.code_PAR(self.data)
             print("coding mode: PARITY BIT")
+            self.data=self.coder.code_PAR(self.data)
         elif mode == "CRC":
             self.coder.code_CRC(self.data)
             print("coding mode: CRC")
@@ -67,12 +67,19 @@ class Transmitter:
         return
 
     data_noised = []
+    cross_prob = 0.5
+
+    def setCross_prob(self, prob):
+        if prob>1 or prob<0:
+            raise ValueError("Probability have to be less than 1 and greater than 0")
+        self.cross_prob=prob
+        print("\nCrossover probability set to: ", prob, "\n")
+        return
+
 
     def simulateNoise(self, data_sent):
-        data_nsd = data_sent.copy()
-        # TODO::NOISE
-        data_nsd[2] = 0
-        # TODO::NOISE
+        bsc = komm.BinarySymmetricChannel(self.cross_prob)
+        data_nsd = bsc(data_sent)
         self.data_noised = data_nsd
         return
 # end class Transmission
@@ -84,6 +91,23 @@ class Receiver:
         def __init__(self):
             print("decoder initiated")
             return
+
+        def encode_PAR(self, data, n=0):
+            if n==0: n = len(data) - 1
+            sum = 0
+            i = 0
+            counter = 1
+            stop = len(data)
+            while i < stop:
+                sum = sum + data[i]
+                if (counter) % n == 0:
+                    i = i + 1
+                    if sum % 2 != data[i]: return False
+                    #TODO usuwanie bitow nadmiarowych (?)
+                    sum = 0
+                counter = counter + 1
+                i = i + 1
+            return True
 
         def encode_CRC(self, data_rcvd, data_snt):
             for idx in range(1, len(data_rcvd)):
@@ -99,8 +123,8 @@ class Receiver:
     def encode(self, mode):
         good = False
         if mode == "PAR":
-            # TODO::
             print("encoding mode: PARITY BIT")
+            good = self.encoder.encode_PAR(self.data_received)
         elif mode == "CRC":
             # TODO::
             print("encoding mode: CRC")
@@ -125,13 +149,18 @@ receiver = Receiver()
 print("----------------------")
 
 sender.data = generator.generate(4)
+print("\ndata generated: \t\t", sender.data)
 
+transmitter.setCross_prob(0.5)
+
+sender.code("PAR")
+print("\ndata coded:     \t\t", sender.data)
 sender.send(transmitter)
 
 receiver.updateDataSent(sender.data)
 receiver.updateDataReceived(transmitter.data_noised)
 
-if receiver.encode("CRC"):
+if receiver.encode("PAR"):
     print("Nie wystapilo zaklocenie")
 else:
     print("Wystapilo zaklocenie")
