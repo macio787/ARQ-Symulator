@@ -1,5 +1,6 @@
 import komm
 
+
 class Transmitter:
     def __init__(self, prob):
         self.setCrossProb(prob)
