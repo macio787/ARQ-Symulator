@@ -6,9 +6,8 @@ class Sender:
             print("coder initiated")
             return
 
-        def code_PAR(self, data):
+        def code_PAR(self, data, n):
             data_snd = data.copy()
-            n = len(data_snd)
             sum = 0
             i = 0
             counter = 1
@@ -35,13 +34,12 @@ class Sender:
     data_send = []
     coder = Coder()
 
-    def code(self, mode):
+    def code(self, mode, packet_lenght=0):
+        if packet_lenght==0: packet_lenght = len(self.data_raw)
         if mode == "PAR":
-            print("\t->coding mode: PARITY BIT")
-            return self.coder.code_PAR(self.data_raw)
+            return self.coder.code_PAR(self.data_raw, packet_lenght)
         elif mode == "CRC":
-            print("\t->coding mode: CRC")
-            return self.coder.code_CRC(self.data_raw)
+            return self.coder.code_CRC(self.data_raw, packet_lenght)
         return
 
 

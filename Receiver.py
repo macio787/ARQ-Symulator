@@ -40,12 +40,12 @@ class Receiver:
     encoder = Encoder()
     interference = False
 
-    def encode(self, mode):
-
+    def encode(self, mode, packet_length=0):
+        if packet_length==0: packet_length = len(self.data_raw)
         if mode == "PAR":
-            return self.encoder.encode_PAR(self)
+            return self.encoder.encode_PAR(self, packet_length)
         elif mode == "CRC":
-            return self.encoder.encode_CRC(self)
+            return self.encoder.encode_CRC(self, packet_length)
         return
 
 
