@@ -4,7 +4,9 @@ from Transmitter import Transmitter
 from Analyzer import Analyzer
 from Generator import Generator
 
+
 # functions
+
 
 def printInterference():
     if receiver.interference:
@@ -20,13 +22,15 @@ def arrToStr(data):
         tmp += str(data[i])
     return tmp
 
+
 # ---RUN---
 # parametres
 
+
 mode = "CRC"
-data_length = 4
-packet_length = 2
-cross_prob = 0.6
+data_length = 10000
+packet_length = 4
+cross_prob = 0.0001
 
 # init
 generator = Generator()
@@ -79,8 +83,37 @@ while running:
             receiver.data_raw = sender.data_raw
             receiver.data_received = transmitter.data_noised
 
+            receiver.encode(mode, packet_length)
+
             print("->Data received:\t", arrToStr(receiver.data_received))
             analyzer.analize(mode, packet_length)
             print("------\n")
 
+    elif choice == "6": #testing mode
 
+        out = 'i\tmode\tdata length\tpacket length\tcross prob\tBER\t\t\tredundancy\n'
+        f = open("result.txt", "w")
+        for i in range(100):
+            # generate
+            sender.data_raw = generator.generate(data_length)
+            # code
+            sender.data_send = sender.code(mode, packet_length)
+            # send
+            transmitter.simulateNoise(sender.data_raw)
+            # receive
+            receiver.key_crc_correct = sender.key_crc
+            receiver.data_raw = sender.data_raw
+            receiver.data_received = transmitter.data_noised
+            receiver.encode(mode, packet_length)
+            analyzer.analize(mode, packet_length)
+
+            out += str(i) + "\t"
+            out += mode + "\t\t"
+            out += str(data_length) + "\t\t\t"
+            out += str(packet_length) + "\t\t\t"
+            out += str(cross_prob) + "\t\t"
+            out += str('{0:.7f}'.format(analyzer.ber)) + "\t"
+            out += str('{0:.1f}'.format(analyzer.redundancy))
+            print(out, file=f)
+            out = ''
+        f.close()

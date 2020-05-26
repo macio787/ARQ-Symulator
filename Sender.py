@@ -12,14 +12,13 @@ class Sender:
             sum = 0
             i = 0
             counter = 1
-            stop = len(data_snd) + len(data_snd) / n
+            stop = len(data_snd)
             while i < stop:
                 sum = sum + data_snd[i]
                 if (counter) % n == 0:
-                    i = i + 1
-                    data_snd.insert(i, sum % 2)
+                    data_snd.append(sum % 2)
                     sum = 0
-                counter = counter + 1
+                counter += 1
                 i = i + 1
             return data_snd
 

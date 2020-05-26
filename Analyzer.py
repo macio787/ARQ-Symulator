@@ -13,13 +13,13 @@ class Analyzer:
     sender = Sender
     receiver = Receiver
     ber = float
+    redundancy = float
 
     def analize(self, mode, packet_length=0):
-        start = int(round(time.time() * 1000000000.0))
         if packet_length == 0:
             packet_length = len(self.sender.data_raw)
 
-        corrupted = 0
+        corrupted_bits = 0
         redundant_bits = int
         if mode == "CRC":
             redundant_bits = 16
@@ -28,26 +28,43 @@ class Analyzer:
             # check only corrupted keys
             for i in range(len(self.receiver.key_crc_received)):
                 if self.receiver.key_crc_received != self.receiver.key_crc_correct:
-                    start_idx = i * packet_length
+                    start_par_bits = i * packet_length
                     for j in range(packet_length):
-                        curr_idx = start_idx + j
+                        curr_idx = start_par_bits + j
                         if self.receiver.data_received[curr_idx] != self.sender.data_raw[curr_idx]:
-                            corrupted += 1
+                            corrupted_bits += 1
+            self.receiver.key_crc_received.clear()
 
         elif mode == "PAR":
             redundant_bits = 1
-            i_received = -1
-            for i_raw in range(len(self.sender.data_raw)):
-                if i_raw % packet_length == 0:
-                    i_received = i_received + 1
-                if self.sender.data_raw[i_raw] != self.receiver.data_received[i_received]:
-                    corrupted += 1
-                i_received += 1
 
-        self.ber = corrupted / len(self.sender.data_raw)
-        total_redundancy = redundant_bits * len(self.sender.data_raw) / packet_length
-        end = int(round(time.time() * 1000000000.0))
+            corrupted_par_bits = 0
+            par_counter = -1
+            par_corrupt = False
+            start_par_bits = len(self.sender.data_raw)
 
-        print("Ber: ", self.ber, "\nTotal redundancy: ", total_redundancy)
-        print("analizing time: ", (end-start)/1000000.0 ," ms")
+            for i in range(start_par_bits):
+                if self.sender.data_send[i] != self.receiver.data_received[i]:
+                    corrupted_bits += 1
+                    if i % packet_length == 0:
+                        print("parcounter++")
+                        par_counter += 1
+                        par_corrupt = False
+
+                    if not par_corrupt:
+                        curr_par_bit_idx = start_par_bits + par_counter
+                        print("end is; " + str(len(self.receiver.data_received)))
+                        if self.sender.data_send[curr_par_bit_idx] == self.receiver.data_received[curr_par_bit_idx]:
+                            par_corrupt = True
+                            corrupted_par_bits += 1
+
+            # bit parzystosci nie pokazal bledu, a tak na prawde byl
+            print("\nmismatched parity bits: " + str(corrupted_par_bits))
+
+        self.ber = corrupted_bits / len(self.sender.data_raw)
+        self.redundancy = redundant_bits * len(self.sender.data_raw) / packet_length
+
+        print("Ber: ")
+        print('{0:.7f}'.format(self.ber))
+        print("\nTotal redundancy: ", self.redundancy)
 # end class Analyzer
