@@ -21,14 +21,18 @@ class Receiver:
     def encode_CRC(self, n):
         if n > 16:
             n = 16
-        # separate packets and generate key for each
-        tmp_arr = []
-        for i in range(0, len(self.data_received)):
-            tmp_arr.append(self.data_received[i])
-            if i % n == (n - 1):
-                self.key_crc_received.append(crc16.crc16xmodem(
-                    self.arrayToBytes(tmp_arr)))
-                tmp_arr.clear()
+        i = 0
+        counter = 1
+        stop = len(self.data_received)
+        arr = []
+        while i < stop:
+            arr.append(self.data_received[i])
+            if counter % n == 0:
+                val = crc16.crc16xmodem(self.arrayToBytes(arr))
+                self.data_received = numpy.concatenate([self.data_received, [val]])
+                arr.clear()
+            counter += 1
+            i += 1
         return
 
     def arrayToBytes(self, data):

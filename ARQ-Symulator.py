@@ -27,10 +27,10 @@ def arrToStr(data):
 # parametres
 
 
-mode = "CRC"
-data_length = 10000
-packet_length = 4
-cross_prob = 0.0001
+mode = "PAR"
+data_length = 61440
+packet_length = 2
+cross_prob = 0.00001
 
 # init
 generator = Generator()
@@ -87,13 +87,18 @@ while running:
 
             print("->Data received:\t", arrToStr(receiver.data_received))
             analyzer.analize(mode, packet_length)
+            print(str('{0:.6f}'.format(analyzer.ber)))
             print("------\n")
 
-    elif choice == "6": #testing mode
+    elif choice == "6": # testing mode
 
-        out = 'i\tmode\tdata length\tpacket length\tcross prob\tBER\t\t\tredundancy\n'
+        # out = 'i\tmode\tdata length\tpacket length\tcross prob\tBER\t\t\tredundancy\n'
+        out = ''
         f = open("result.txt", "w")
-        for i in range(100):
+        avg_ber = 0
+        repetitions = 100
+        ccc = 0
+        for i in range(repetitions):
             # generate
             sender.data_raw = generator.generate(data_length)
             # code
@@ -108,12 +113,17 @@ while running:
             analyzer.analize(mode, packet_length)
 
             out += str(i) + "\t"
-            out += mode + "\t\t"
-            out += str(data_length) + "\t\t\t"
-            out += str(packet_length) + "\t\t\t"
-            out += str(cross_prob) + "\t\t"
-            out += str('{0:.7f}'.format(analyzer.ber)) + "\t"
+            out += mode + "\t"
+            out += str(data_length) + "\t"
+            out += str(packet_length) + "\t"
+            out += str(cross_prob) + "\t"
+            out += str('{0:.8f}'.format(analyzer.ber)) + "\t"
             out += str('{0:.1f}'.format(analyzer.redundancy))
             print(out, file=f)
+            avg_ber += analyzer.ber
             out = ''
+            ccc += 1
+            print(ccc)
+        avg_ber = float(avg_ber / repetitions)
+        print(str('{0:.8f}'.format(avg_ber)), file=f)
         f.close()
